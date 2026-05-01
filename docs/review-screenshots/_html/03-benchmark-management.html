@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      :root { --bg:#0b0d10; --panel:#14181d; --border:#2a313a; --text:#eef2f7; --muted:#93a0b2; --accent:#d7f171; }
+      * { box-sizing:border-box; } body { margin:0; font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:linear-gradient(180deg,#0b0d10,#101419 58%,#0b0d10); color:var(--text);}
+      .frame { width:1440px; min-height:920px; padding:34px; } .window { border:1px solid var(--border); border-radius:24px; overflow:hidden; background:#101419; }
+      .topbar { height:68px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; padding:0 24px; background:#14181d; }
+      .title h1 { margin:0; font-size:22px; } .title p { margin:4px 0 0; color:var(--muted); font-size:12px; }
+      .actions { display:flex; gap:10px; } .chip,.button { border:1px solid var(--border); border-radius:999px; padding:8px 14px; color:var(--muted); font-size:12px; background:rgba(255,255,255,.02); }
+      .button.primary { background:var(--accent); color:#111; font-weight:700; }
+      .body { display:grid; grid-template-columns:220px 1fr; min-height:852px; } .sidebar { border-right:1px solid var(--border); padding:22px 16px; background:#14181d; }
+      .sidebar h3 { margin:0 0 14px; color:var(--muted); font-size:11px; letter-spacing:.18em; text-transform:uppercase; } .nav { display:flex; flex-direction:column; gap:8px; }
+      .nav-item { border-radius:14px; padding:12px 14px; font-size:13px; color:var(--muted); } .nav-item.active { color:var(--text); background:rgba(255,255,255,.04); border:1px solid var(--border); }
+      .main { padding:24px; } .tabs { display:flex; gap:12px; margin-bottom:22px; } .tab { padding:10px 0; font-size:12px; color:var(--muted); border-bottom:2px solid transparent; } .tab.active { color:var(--text); border-bottom-color:var(--accent); }
+      .grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; } .card { background:linear-gradient(180deg,rgba(20,24,29,.95),rgba(18,22,27,.92)); border:1px solid var(--border); border-radius:22px; padding:18px; }
+      .eyebrow { color:var(--muted); font-size:10px; letter-spacing:.16em; text-transform:uppercase; } .subtle { color:var(--muted); font-size:12px; } .list { display:flex; flex-direction:column; gap:10px; margin-top:16px; }
+      .row { display:flex; justify-content:space-between; gap:12px; border:1px solid var(--border); border-radius:16px; padding:12px 14px; background:rgba(255,255,255,.02); } .meta { color:var(--muted); font-size:11px; margin-top:4px; }
+      .textarea { min-height:120px; padding:12px; border-radius:16px; border:1px solid var(--border); background:rgba(11,13,16,.65); color:var(--text); font-size:12px; line-height:1.5; white-space:pre-wrap; }
+      .bench-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; }
+    </style>
+  </head>
+  <body>
+    <div class="frame">
+      <div class="window">
+        <div class="topbar">
+          <div class="title"><h1>agent-system-audit</h1><p>Skill detail · local skill · current implementation preview</p></div>
+          <div class="actions"><div class="chip">Analyze</div><div class="chip">Evaluate</div><div class="button primary">Quality</div></div>
+        </div>
+        <div class="body">
+          <div class="sidebar">
+            <h3>Library</h3>
+            <div class="nav">
+              <div class="nav-item">All Skills</div>
+              <div class="nav-item active">agent-system-audit</div>
+              <div class="nav-item">prompt-trace</div>
+            </div>
+          </div>
+          <div class="main">
+            <div class="tabs"><div class="tab">Content</div><div class="tab active">Quality</div><div class="tab">Analysis</div><div class="tab">Evaluation</div></div>
+            <div class="grid">
+              <div class="card">
+                <div class="eyebrow">Benchmark</div>
+                <div class="subtle">Golden dataset cases</div>
+                <div class="list">
+                  <div class="textarea">Case name
+release regression guard</div>
+                  <div class="textarea">Prompt / input
+Given a changelog and a risky diff, produce a release blocker summary.</div>
+                  <div class="textarea">Expected output
+- identify the regression
+- point to the changed file
+- propose the safest rollback path</div>
+                  <div class="textarea">Notes
+Used as the core benchmark for CI gate validation.</div>
+                  <div class="button primary" style="display:inline-block;width:160px;text-align:center;">Add case</div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="eyebrow">Benchmark Cases</div>
+                <div class="list">
+                  <div class="row"><div><strong>release regression guard</strong><div class="meta">Updated 2026-05-01 15:44</div></div><div><span class="chip">Edit</span> <span class="chip">Delete</span></div></div>
+                  <div class="bench-grid">
+                    <div class="textarea">Prompt
+Summarize whether this skill update should block release and why.</div>
+                    <div class="textarea">Expected
+Concise blocker summary + recommended next action.</div>
+                  </div>
+                  <div class="row"><div><strong>agent handoff quality</strong><div class="meta">Updated 2026-04-29 22:10</div></div><div><span class="chip">Edit</span> <span class="chip">Delete</span></div></div>
+                  <div class="bench-grid">
+                    <div class="textarea">Prompt
+Review a handoff and identify missing assumptions.</div>
+                    <div class="textarea">Expected
+List missing constraints and one clarifying question.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

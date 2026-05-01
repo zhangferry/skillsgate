@@ -1,0 +1,329 @@
+
+    <html>
+      <head><meta charset="utf-8" /><style>
+  :root {
+    --bg: #0b0d10;
+    --panel: #14181d;
+    --panel-2: #1a2027;
+    --border: #2a313a;
+    --text: #eef2f7;
+    --muted: #93a0b2;
+    --accent: #d7f171;
+    --green: #4ade80;
+    --red: #fb7185;
+    --blue: #60a5fa;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background:
+      radial-gradient(circle at top left, rgba(215, 241, 113, 0.08), transparent 32%),
+      linear-gradient(180deg, #0b0d10, #101419 58%, #0b0d10);
+    color: var(--text);
+  }
+  .frame {
+    width: 1440px;
+    min-height: 920px;
+    padding: 34px;
+  }
+  .window {
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    background: rgba(12, 15, 18, 0.9);
+    overflow: hidden;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+  }
+  .topbar {
+    height: 68px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    background: rgba(20, 24, 29, 0.88);
+  }
+  .title {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .title h1 {
+    margin: 0;
+    font-size: 22px;
+  }
+  .title p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .actions {
+    display: flex;
+    gap: 10px;
+  }
+  .chip, .button {
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 14px;
+    color: var(--muted);
+    font-size: 12px;
+    background: rgba(255,255,255,0.02);
+  }
+  .button.primary {
+    background: var(--accent);
+    color: #111;
+    border-color: rgba(215, 241, 113, 0.25);
+    font-weight: 700;
+  }
+  .body {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    min-height: 852px;
+  }
+  .sidebar {
+    border-right: 1px solid var(--border);
+    background: rgba(20, 24, 29, 0.75);
+    padding: 22px 16px;
+  }
+  .sidebar h3 {
+    margin: 0 0 14px;
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+  .nav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .nav-item {
+    border-radius: 14px;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid transparent;
+  }
+  .nav-item.active {
+    color: var(--text);
+    background: rgba(255,255,255,0.04);
+    border-color: var(--border);
+  }
+  .main {
+    padding: 24px;
+  }
+  .tabs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+  .tab {
+    padding: 10px 0;
+    font-size: 12px;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+  }
+  .tab.active {
+    color: var(--text);
+    border-bottom-color: var(--accent);
+  }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 18px;
+    margin-bottom: 18px;
+  }
+  .grid-equal {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 18px;
+  }
+  .card {
+    background: linear-gradient(180deg, rgba(20,24,29,.95), rgba(18,22,27,.92));
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    padding: 18px;
+  }
+  .card h2, .card h3, .card h4 {
+    margin: 0;
+  }
+  .eyebrow {
+    color: var(--muted);
+    font-size: 10px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+  }
+  .subtle {
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .big {
+    font-size: 30px;
+    font-weight: 700;
+    margin-top: 8px;
+  }
+  .list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 12px 14px;
+    background: rgba(255,255,255,0.02);
+  }
+  .row .meta {
+    color: var(--muted);
+    font-size: 11px;
+    margin-top: 4px;
+  }
+  .badge {
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px 8px;
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .score {
+    font-size: 26px;
+    font-weight: 700;
+  }
+  .good { color: var(--green); }
+  .bad { color: var(--red); }
+  .muted { color: var(--muted); }
+  .compare {
+    display: grid;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .delta-plus { color: var(--green); font-weight: 700; }
+  .delta-minus { color: var(--red); font-weight: 700; }
+  .chart {
+    margin-top: 16px;
+    height: 190px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: rgba(255,255,255,0.02);
+    position: relative;
+    overflow: hidden;
+  }
+  .chart svg { width: 100%; height: 100%; display: block; }
+  .bench-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 14px;
+  }
+  .textarea {
+    min-height: 120px;
+    padding: 12px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: rgba(11,13,16,.65);
+    color: var(--text);
+    font-size: 12px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+  }
+  .pill-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+  .pill {
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+</style></head>
+      <body>
+        <div class="frame">
+          <div class="window">
+            <div class="topbar">
+              <div class="title">
+                <h1>agent-system-audit</h1>
+                <p>Skill detail · local skill · current implementation preview</p>
+              </div>
+              <div class="actions">
+                <div class="chip">Analyze</div>
+                <div class="chip">Evaluate</div>
+                <div class="button primary">Quality</div>
+              </div>
+            </div>
+            <div class="body">
+              <div class="sidebar">
+                <h3>Library</h3>
+                <div class="nav">
+                  <div class="nav-item">All Skills</div>
+                  <div class="nav-item active">agent-system-audit</div>
+                  <div class="nav-item">prompt-trace</div>
+                  <div class="nav-item">release-guard</div>
+                </div>
+              </div>
+              <div class="main">
+                <div class="tabs">
+                  <div class="tab">Content</div>
+                  <div class="tab active">Quality</div>
+                  <div class="tab">Analysis</div>
+                  <div class="tab">Evaluation</div>
+                </div>
+                
+      <div class="grid-2">
+        <div class="card">
+          <div class="eyebrow">Trend</div>
+          <div class="subtle">Overall score over time</div>
+          <div class="chart">
+  <svg viewBox="0 0 720 190" preserveAspectRatio="none">
+    <path d="M40 150 H680" stroke="#2a313a" fill="none" />
+    <path d="M40 25 V150" stroke="#2a313a" fill="none" />
+    <path d="M40 128 L200 110 L360 102 L520 66 L680 58" stroke="#d7f171" stroke-width="3" fill="none" />
+    <circle cx="40" cy="128" r="5" fill="#eef2f7" />
+    <circle cx="200" cy="110" r="5" fill="#eef2f7" />
+    <circle cx="360" cy="102" r="5" fill="#eef2f7" />
+    <circle cx="520" cy="66" r="5" fill="#eef2f7" />
+    <circle cx="680" cy="58" r="5" fill="#eef2f7" />
+  </svg>
+</div>
+          <div class="list">
+            <div class="row"><div><strong>1.2.0 baseline</strong><div class="meta">2026-04-15</div></div><div>74</div></div>
+            <div class="row"><div><strong>1.3.0 workflow polish</strong><div class="meta">2026-04-25</div></div><div>82</div></div>
+            <div class="row"><div><strong>1.4.0 current</strong><div class="meta">2026-05-01</div></div><div>87</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="eyebrow">Evaluation Compare</div>
+          <div class="subtle">A/B compare two saved snapshots</div>
+          <div class="compare">
+            <div class="row">
+              <div><strong>Overall</strong><div class="meta">1.3.0 82 → 1.4.0 87</div></div>
+              <div class="delta-plus">+5</div>
+            </div>
+            <div class="row"><div>Clarity</div><div class="delta-plus">78 → 84 (+6)</div></div>
+            <div class="row"><div>Completeness</div><div class="delta-plus">81 → 86 (+5)</div></div>
+            <div class="row"><div>Effectiveness</div><div class="delta-plus">83 → 88 (+5)</div></div>
+            <div class="row"><div>Robustness</div><div class="delta-plus">77 → 84 (+7)</div></div>
+            <div class="row"><div>Best Practices</div><div class="delta-plus">86 → 89 (+3)</div></div>
+            <div class="row"><div>Specificity</div><div class="delta-plus">87 → 90 (+3)</div></div>
+          </div>
+        </div>
+      </div>
+    
+              </div>
+            </div>
+          </div>
+        </div>
+      </body>
+    </html>
+  
