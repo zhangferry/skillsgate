@@ -2000,6 +2000,72 @@ Add your skill instructions here.
       }
     },
   )
+
+  // Skill analysis — local analysis of skill structure and quality
+  ipcMain.handle(
+    "skills:analyze",
+    async (_event, skillPath: string): Promise<unknown> => {
+      const resolved = path.resolve(skillPath)
+      if (!isSkillPathAllowed(resolved)) {
+        throw new Error("Access denied: path is outside skill directories")
+      }
+
+      // Dynamic import to avoid loading CLI modules at startup
+      const { analyzeSkill } = await import("../../../packages/cli/src/core/skill-analyzer.js")
+      return await analyzeSkill(resolved)
+    },
+  )
+
+  // Skill evaluation — AI-powered quality assessment
+  ipcMain.handle(
+    "skills:evaluate",
+    async (
+      _event,
+      skillPath: string,
+      options?: { scanner?: string; mode?: string; timeout?: number },
+    ): Promise<unknown> => {
+      const resolved = path.resolve(skillPath)
+      if (!isSkillPathAllowed(resolved)) {
+        throw new Error("Access denied: path is outside skill directories")
+      }
+
+      // Read skill content
+      const skillMdPath = path.join(resolved, "SKILL.md")
+      let content: string
+      try {
+        content = await fs.readFile(skillMdPath, "utf-8")
+      } catch {
+        throw new Error(`Could not read SKILL.md at ${skillMdPath}`)
+      }
+
+      const skillName = path.basename(resolved)
+
+      const { evaluateSkill } = await import("../../../packages/cli/src/core/skill-evaluator.js")
+      const result = await evaluateSkill({
+        skills: [{ name: skillName, content, relativePath: "SKILL.md" }],
+        options: {
+          scanner: options?.scanner as any,
+          mode: (options?.mode as any) || "standard",
+          timeout: options?.timeout || 120,
+          yes: true,
+        },
+        cwd: resolved,
+      })
+
+      if (result.evaluation) {
+        result.evaluation.name = skillName
+      }
+
+      return {
+        evaluation: result.evaluation,
+        scannerUsed: result.scannerUsed,
+        durationMs: result.durationMs,
+        timedOut: result.timedOut,
+        creditsExhausted: result.creditsExhausted,
+        parseFailed: result.parseFailed,
+      }
+    },
+  )
 }
 
 // Export for use by file-watcher and main process

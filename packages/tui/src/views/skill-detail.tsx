@@ -9,6 +9,9 @@ import { ConfirmDialog } from "../components/confirm-dialog.js"
 import { fetchSkillContent } from "../data/api-client.js"
 import { colors, agentBadges as badgeMap } from "../utils/colors.js"
 import { agents } from "../../../cli/src/core/agents.js"
+import { analyzeSkill, formatAnalysisReport } from "../../../cli/src/core/skill-analyzer.js"
+import { evaluateSkill, formatEvaluationReport } from "../../../cli/src/core/skill-evaluator.js"
+import type { SkillAnalysis, EvaluationMode } from "../../../cli/src/types.js"
 
 /**
  * Reads the full SKILL.md content for display.
@@ -64,6 +67,15 @@ export function SkillDetailView() {
   const [editMode, setEditMode] = useState(false)
   const [pendingAction, setPendingAction] = useState<DetailPendingAction>(null)
   const [removeMode, setRemoveMode] = useState<RemoveMode>(null)
+
+  // Analysis & Evaluation state
+  const [viewMode, setViewMode] = useState<"content" | "analysis" | "evaluation">("content")
+  const [analysisResult, setAnalysisResult] = useState<SkillAnalysis | null>(null)
+  const [analysisLoading, setAnalysisLoading] = useState(false)
+  const [analysisError, setAnalysisError] = useState<string | null>(null)
+  const [evaluationResult, setEvaluationResult] = useState<string | null>(null)
+  const [evaluationLoading, setEvaluationLoading] = useState(false)
+  const [evaluationError, setEvaluationError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!skill) return
@@ -200,6 +212,78 @@ export function SkillDetailView() {
       setPendingAction("install")
       return
     }
+
+    // a to analyze skill (local skills only)
+    if (key.name === "a" && skill?.filePath) {
+      if (viewMode === "analysis") {
+        setViewMode("content")
+      } else if (analysisResult) {
+        setViewMode("analysis")
+      } else {
+        // Run analysis
+        setAnalysisLoading(true)
+        setAnalysisError(null)
+        setViewMode("analysis")
+        const skillDir = path.dirname(skill.filePath)
+        try {
+          analyzeSkill(skillDir).then((result) => {
+            setAnalysisResult(result)
+            setAnalysisLoading(false)
+          }).catch((err) => {
+            setAnalysisError(err instanceof Error ? err.message : "Analysis failed")
+            setAnalysisLoading(false)
+          })
+        } catch (err) {
+          setAnalysisError(err instanceof Error ? err.message : "Analysis failed")
+          setAnalysisLoading(false)
+        }
+      }
+      return
+    }
+
+    // x to evaluate skill (local skills only)
+    if (key.name === "x" && skill?.filePath) {
+      if (viewMode === "evaluation") {
+        setViewMode("content")
+      } else if (evaluationResult) {
+        setViewMode("evaluation")
+      } else {
+        // Run evaluation
+        setEvaluationLoading(true)
+        setEvaluationError(null)
+        setViewMode("evaluation")
+        const skillDir = path.dirname(skill.filePath)
+        const raw = readSkillContent(skill.filePath)
+        evaluateSkill({
+          skills: [{ name: skill.name, content: raw, relativePath: "SKILL.md" }],
+          options: { mode: "quick" as EvaluationMode, timeout: 60, yes: true },
+          cwd: skillDir,
+        }).then((result) => {
+          if (result.evaluation) {
+            setEvaluationResult(formatEvaluationReport(result.evaluation))
+          } else {
+            setEvaluationError("Could not parse evaluation results")
+          }
+          setEvaluationLoading(false)
+        }).catch((err) => {
+          setEvaluationError(err instanceof Error ? err.message : "Evaluation failed")
+          setEvaluationLoading(false)
+        })
+      }
+      return
+    }
+
+    // Tab to cycle through views
+    if (key.name === "tab") {
+      if (viewMode === "content" && analysisResult) {
+        setViewMode("analysis")
+      } else if (viewMode === "analysis" && evaluationResult) {
+        setViewMode("evaluation")
+      } else {
+        setViewMode("content")
+      }
+      return
+    }
   })
 
   // Agent selection menu for per-agent delete
@@ -323,6 +407,125 @@ export function SkillDetailView() {
               {rawContent.split("\n").map((line, i) => (
                 <text key={i} fg={colors.text}>{line || " "}</text>
               ))}
+            </box>
+          </scrollbox>
+        </box>
+      ) : viewMode === "analysis" ? (
+        <box style={{ width: "70%", flexGrow: 1, flexDirection: "column" }}>
+          <box style={{ height: 1, paddingLeft: 1, backgroundColor: colors.bgAlt }}>
+            <text fg={colors.primary}>ANALYSIS: {skill.name}  (Tab=cycle views  a=toggle)</text>
+          </box>
+          <scrollbox
+            focused={false}
+            style={{
+              width: "100%",
+              flexGrow: 1,
+              rootOptions: { backgroundColor: colors.bg },
+              viewportOptions: { backgroundColor: colors.bg },
+              contentOptions: { backgroundColor: colors.bg },
+              scrollbarOptions: {
+                trackOptions: {
+                  foregroundColor: colors.primary,
+                  backgroundColor: colors.border,
+                },
+              },
+            }}
+          >
+            <box style={{ paddingLeft: 1, paddingRight: 1, paddingTop: 1, flexDirection: "column" }}>
+              {analysisLoading && (
+                <text fg={colors.textDim}>Analyzing skill...</text>
+              )}
+              {analysisError && (
+                <text fg={colors.error}>Error: {analysisError}</text>
+              )}
+              {analysisResult && (
+                <>
+                  <text fg={colors.primary}><strong>Quality Assessment</strong></text>
+                  <text>{" "}</text>
+                  {analysisResult.qualityIndicators.map((indicator) => {
+                    const percent = Math.round((indicator.score / indicator.maxScore) * 100)
+                    const filled = Math.round(percent / 5)
+                    const empty = 20 - filled
+                    const bar = `[${"█".repeat(filled)}${"░".repeat(empty)}]`
+                    return (
+                      <box key={indicator.category} style={{ flexDirection: "column", marginBottom: 1 }}>
+                        <text fg={colors.text}>
+                          <strong>{indicator.category}</strong>: {indicator.score}/{indicator.maxScore}
+                        </text>
+                        <text fg={percent >= 60 ? colors.success : colors.warning}>{bar}</text>
+                        <text fg={colors.textDim}>{indicator.description}</text>
+                        {indicator.suggestions.map((s, i) => (
+                          <text key={i} fg={colors.warning}>  ! {s}</text>
+                        ))}
+                      </box>
+                    )
+                  })}
+                  <text>{" "}</text>
+                  <text fg={colors.primary}><strong>Metrics</strong></text>
+                  <text fg={colors.text}>Words: {analysisResult.metrics.wordCount}</text>
+                  <text fg={colors.text}>Readability: {analysisResult.metrics.readabilityScore}/100</text>
+                  <text fg={colors.text}>Complexity: {analysisResult.metrics.complexity}</text>
+                  <text fg={colors.text}>Specificity: {analysisResult.metrics.specificity}/100</text>
+                  {analysisResult.techniques.length > 0 && (
+                    <>
+                      <text>{" "}</text>
+                      <text fg={colors.primary}><strong>Techniques</strong></text>
+                      {analysisResult.techniques.map((t) => (
+                        <text key={t} fg={colors.text}>  - {t}</text>
+                      ))}
+                    </>
+                  )}
+                </>
+              )}
+            </box>
+          </scrollbox>
+        </box>
+      ) : viewMode === "evaluation" ? (
+        <box style={{ width: "70%", flexGrow: 1, flexDirection: "column" }}>
+          <box style={{ height: 1, paddingLeft: 1, backgroundColor: colors.bgAlt }}>
+            <text fg={colors.primary}>EVALUATION: {skill.name}  (Tab=cycle views  x=toggle)</text>
+          </box>
+          <scrollbox
+            focused={false}
+            style={{
+              width: "100%",
+              flexGrow: 1,
+              rootOptions: { backgroundColor: colors.bg },
+              viewportOptions: { backgroundColor: colors.bg },
+              contentOptions: { backgroundColor: colors.bg },
+              scrollbarOptions: {
+                trackOptions: {
+                  foregroundColor: colors.primary,
+                  backgroundColor: colors.border,
+                },
+              },
+            }}
+          >
+            <box style={{ paddingLeft: 1, paddingRight: 1, paddingTop: 1, flexDirection: "column" }}>
+              {evaluationLoading && (
+                <text fg={colors.textDim}>Evaluating with AI agent...</text>
+              )}
+              {evaluationError && (
+                <text fg={colors.error}>Error: {evaluationError}</text>
+              )}
+              {evaluationResult && evaluationResult.split("\n").map((line, i) => {
+                if (line.startsWith("# ")) {
+                  return <text key={i} fg={colors.primary}><strong>{line}</strong></text>
+                }
+                if (line.startsWith("## ")) {
+                  return <text key={i} fg={colors.primary}>{line}</text>
+                }
+                if (line.startsWith("### ")) {
+                  return <text key={i} fg={colors.text}>{line}</text>
+                }
+                if (line.startsWith("- ")) {
+                  return <text key={i} fg={colors.text}>{line}</text>
+                }
+                if (!line.trim()) {
+                  return <text key={i}>{" "}</text>
+                }
+                return <text key={i} fg={colors.text}>{line}</text>
+              })}
             </box>
           </scrollbox>
         </box>
@@ -481,6 +684,15 @@ export function SkillDetailView() {
         <text fg={colors.textDim}>q/Esc  Go back</text>
         {isLocal && (
           <text fg={colors.textDim}>e      {editMode ? "Back to view" : "View raw source"}</text>
+        )}
+        {isLocal && (
+          <text fg={colors.textDim}>a      {viewMode === "analysis" ? "Back to content" : "Analyze skill"}</text>
+        )}
+        {isLocal && (
+          <text fg={colors.textDim}>x      {viewMode === "evaluation" ? "Back to content" : "Evaluate skill"}</text>
+        )}
+        {(analysisResult || evaluationResult) && (
+          <text fg={colors.textDim}>Tab    Cycle views</text>
         )}
         {isLocal ? (
           <text fg={colors.textDim}>o      Open folder</text>

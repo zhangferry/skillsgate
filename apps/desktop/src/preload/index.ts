@@ -60,6 +60,12 @@ contextBridge.exposeInMainWorld("electronAPI", {
   addToAgent: (skillName: string, canonicalPath: string, agentName: string) =>
     ipcRenderer.invoke("skills:add-to-agent", skillName, canonicalPath, agentName),
 
+  // Skill analysis & evaluation
+  analyzeSkill: (skillPath: string) =>
+    ipcRenderer.invoke("skills:analyze", skillPath),
+  evaluateSkill: (skillPath: string, options?: { scanner?: string; mode?: string; timeout?: number }) =>
+    ipcRenderer.invoke("skills:evaluate", skillPath, options),
+
   // Remote servers
   serversList: () => ipcRenderer.invoke("servers:list"),
   serversCreate: (data: {

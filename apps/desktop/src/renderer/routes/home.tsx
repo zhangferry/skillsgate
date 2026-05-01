@@ -902,6 +902,229 @@ function RemoveSkillDialog({ skill, onClose, onRemoveFromAgents, onRemoveAll }: 
 }
 
 // --------------------------------------------------------------------------
+// Analysis & Evaluation Panels
+// --------------------------------------------------------------------------
+
+function ScoreBar({ score, maxScore = 100 }: { score: number; maxScore?: number }) {
+  const percent = Math.round((score / maxScore) * 100)
+  const color = percent >= 80 ? "bg-green-500" : percent >= 60 ? "bg-yellow-500" : percent >= 40 ? "bg-orange-500" : "bg-red-500"
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex-1 h-1.5 rounded-full bg-border overflow-hidden">
+        <div className={`h-full rounded-full ${color} transition-all`} style={{ width: `${percent}%` }} />
+      </div>
+      <span className="text-[11px] text-muted font-mono">{score}/{maxScore}</span>
+    </div>
+  )
+}
+
+function AnalysisPanel({ analysis }: { analysis: SkillAnalysis }) {
+  return (
+    <div className="space-y-6">
+      {/* Quality Indicators */}
+      <div>
+        <h3 className="text-[12px] uppercase tracking-widest text-muted mb-3">Quality Assessment</h3>
+        <div className="space-y-3">
+          {analysis.qualityIndicators.map((indicator) => (
+            <div key={indicator.category} className="rounded-lg border border-border p-3">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[12px] font-medium text-foreground capitalize">{indicator.category}</span>
+                <span className="text-[11px] text-muted">{indicator.description}</span>
+              </div>
+              <ScoreBar score={indicator.score} maxScore={indicator.maxScore} />
+              {indicator.suggestions.length > 0 && (
+                <ul className="mt-2 space-y-1">
+                  {indicator.suggestions.map((s, i) => (
+                    <li key={i} className="text-[11px] text-muted flex items-start gap-1.5">
+                      <span className="text-yellow-500 mt-0.5">!</span>
+                      {s}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Metrics */}
+      <div>
+        <h3 className="text-[12px] uppercase tracking-widest text-muted mb-3">Metrics</h3>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded border border-border p-2">
+            <div className="text-[11px] text-muted">Words</div>
+            <div className="text-[14px] font-medium text-foreground">{analysis.metrics.wordCount}</div>
+          </div>
+          <div className="rounded border border-border p-2">
+            <div className="text-[11px] text-muted">Readability</div>
+            <div className="text-[14px] font-medium text-foreground">{analysis.metrics.readabilityScore}/100</div>
+          </div>
+          <div className="rounded border border-border p-2">
+            <div className="text-[11px] text-muted">Complexity</div>
+            <div className="text-[14px] font-medium text-foreground capitalize">{analysis.metrics.complexity}</div>
+          </div>
+          <div className="rounded border border-border p-2">
+            <div className="text-[11px] text-muted">Specificity</div>
+            <div className="text-[14px] font-medium text-foreground">{analysis.metrics.specificity}/100</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Techniques */}
+      {analysis.techniques.length > 0 && (
+        <div>
+          <h3 className="text-[12px] uppercase tracking-widest text-muted mb-3">Techniques Detected</h3>
+          <div className="flex flex-wrap gap-1.5">
+            {analysis.techniques.map((technique) => (
+              <span key={technique} className="rounded-full border border-border px-2 py-0.5 text-[11px] text-muted">
+                {technique}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Compatibility */}
+      <div>
+        <h3 className="text-[12px] uppercase tracking-widest text-muted mb-3">Compatibility</h3>
+        <div className="space-y-1 text-[12px]">
+          <div className="flex items-center gap-2">
+            <span className="text-muted">Universal scope:</span>
+            <span className={analysis.compatibility.hasUniversalScope ? "text-green-500" : "text-yellow-500"}>
+              {analysis.compatibility.hasUniversalScope ? "Yes" : "No"}
+            </span>
+          </div>
+          {analysis.compatibility.mentionedAgents.length > 0 && (
+            <div className="flex items-start gap-2">
+              <span className="text-muted">Mentioned agents:</span>
+              <span className="text-foreground">{analysis.compatibility.mentionedAgents.join(", ")}</span>
+            </div>
+          )}
+          {analysis.compatibility.requiresSpecialTools && (
+            <div className="flex items-start gap-2">
+              <span className="text-muted">Tool dependencies:</span>
+              <span className="text-foreground">{analysis.compatibility.toolDependencies.join(", ")}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Structure */}
+      <div>
+        <h3 className="text-[12px] uppercase tracking-widest text-muted mb-3">Structure</h3>
+        <div className="grid grid-cols-2 gap-2 text-[12px]">
+          <div>Files: <span className="text-foreground">{analysis.structure.totalFiles}</span></div>
+          <div>Sections: <span className="text-foreground">{analysis.structure.headingCount}</span></div>
+          <div>Code blocks: <span className="text-foreground">{analysis.structure.codeBlockCount}</span></div>
+          <div>Bullet points: <span className="text-foreground">{analysis.structure.bulletPointCount}</span></div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function EvaluationPanel({ result }: { result: EvaluationResult }) {
+  if (!result.evaluation) {
+    return (
+      <div className="rounded-lg border border-border p-4 text-[12px] text-muted">
+        {result.parseFailed ? "Could not parse evaluation results." : "No evaluation data available."}
+      </div>
+    )
+  }
+
+  const eval_ = result.evaluation
+
+  return (
+    <div className="space-y-6">
+      {/* Overall Score */}
+      <div className="text-center py-4">
+        <div className="text-[36px] font-bold text-foreground">{eval_.overallScore}</div>
+        <div className="text-[12px] text-muted">Overall Score (out of 100)</div>
+        <div className="text-[11px] text-muted mt-1">
+          Evaluated by {result.scannerUsed} in {(result.durationMs / 1000).toFixed(1)}s
+        </div>
+      </div>
+
+      {/* Summary */}
+      {eval_.summary && (
+        <div className="rounded-lg border border-border p-4">
+          <p className="text-[12px] text-foreground leading-relaxed">{eval_.summary}</p>
+        </div>
+      )}
+
+      {/* Dimensions */}
+      <div>
+        <h3 className="text-[12px] uppercase tracking-widest text-muted mb-3">Dimensions</h3>
+        <div className="space-y-3">
+          {eval_.dimensions.map((dim) => (
+            <div key={dim.name} className="rounded-lg border border-border p-3">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[12px] font-medium text-foreground">{dim.name}</span>
+                <span className="text-[11px] text-muted">{dim.description}</span>
+              </div>
+              <ScoreBar score={dim.score} maxScore={dim.maxScore} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Strengths */}
+      {eval_.strengths.length > 0 && (
+        <div>
+          <h3 className="text-[12px] uppercase tracking-widest text-muted mb-3">Strengths</h3>
+          <ul className="space-y-1.5">
+            {eval_.strengths.map((s, i) => (
+              <li key={i} className="text-[12px] text-foreground flex items-start gap-2">
+                <span className="text-green-500 mt-0.5">+</span>
+                {s}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Weaknesses */}
+      {eval_.weaknesses.length > 0 && (
+        <div>
+          <h3 className="text-[12px] uppercase tracking-widest text-muted mb-3">Weaknesses</h3>
+          <ul className="space-y-1.5">
+            {eval_.weaknesses.map((w, i) => (
+              <li key={i} className="text-[12px] text-foreground flex items-start gap-2">
+                <span className="text-red-500 mt-0.5">-</span>
+                {w}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Recommendations */}
+      {eval_.recommendations.length > 0 && (
+        <div>
+          <h3 className="text-[12px] uppercase tracking-widest text-muted mb-3">Recommendations</h3>
+          <ul className="space-y-1.5">
+            {eval_.recommendations.map((r, i) => (
+              <li key={i} className="text-[12px] text-foreground flex items-start gap-2">
+                <span className="text-blue-500 mt-0.5">*</span>
+                {r}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Comparison */}
+      {eval_.comparisonToAverage && (
+        <div>
+          <h3 className="text-[12px] uppercase tracking-widest text-muted mb-3">Comparison</h3>
+          <p className="text-[12px] text-foreground leading-relaxed">{eval_.comparisonToAverage}</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// --------------------------------------------------------------------------
 // Right Detail Panel
 // --------------------------------------------------------------------------
 
@@ -935,6 +1158,15 @@ function RightPanel({
   const [showRemoveDialog, setShowRemoveDialog] = useState(false)
   const editorRef = useRef<SkillEditorHandle | null>(null)
 
+  // Analysis & Evaluation state
+  const [analysisResult, setAnalysisResult] = useState<SkillAnalysis | null>(null)
+  const [analysisLoading, setAnalysisLoading] = useState(false)
+  const [analysisError, setAnalysisError] = useState<string | null>(null)
+  const [evaluationResult, setEvaluationResult] = useState<EvaluationResult | null>(null)
+  const [evaluationLoading, setEvaluationLoading] = useState(false)
+  const [evaluationError, setEvaluationError] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<"content" | "analysis" | "evaluation">("content")
+
   // Reset edit mode when skill changes
   useEffect(() => {
     setEditMode(false)
@@ -942,6 +1174,11 @@ function RightPanel({
     setSelectedSupportingFile(null)
     setSaveStatus("idle")
     setShowRemoveDialog(false)
+    setAnalysisResult(null)
+    setAnalysisError(null)
+    setEvaluationResult(null)
+    setEvaluationError(null)
+    setActiveTab("content")
   }, [skill?.canonicalPath])
 
   useEffect(() => {
@@ -1041,6 +1278,36 @@ function RightPanel({
       if (confirm(`Remove "${skill.name}" from ${skill.agents[0]}?`)) {
         electronAPI.removeSkill(skill.name).then(() => onSkillRemoved())
       }
+    }
+  }
+
+  const handleAnalyze = async () => {
+    if (!skill?.path) return
+    setAnalysisLoading(true)
+    setAnalysisError(null)
+    setActiveTab("analysis")
+    try {
+      const result = await electronAPI.analyzeSkill(skill.path)
+      setAnalysisResult(result)
+    } catch (err) {
+      setAnalysisError(err instanceof Error ? err.message : "Analysis failed")
+    } finally {
+      setAnalysisLoading(false)
+    }
+  }
+
+  const handleEvaluate = async () => {
+    if (!skill?.path) return
+    setEvaluationLoading(true)
+    setEvaluationError(null)
+    setActiveTab("evaluation")
+    try {
+      const result = await electronAPI.evaluateSkill(skill.path, { mode: "standard" })
+      setEvaluationResult(result)
+    } catch (err) {
+      setEvaluationError(err instanceof Error ? err.message : "Evaluation failed")
+    } finally {
+      setEvaluationLoading(false)
     }
   }
 
@@ -1173,8 +1440,32 @@ function RightPanel({
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="3 6 5 6 21 6" />
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                     </svg>
+                  </button>
+                )}
+
+                {/* Analyze */}
+                {isLocalSkill && (
+                  <button
+                    onClick={handleAnalyze}
+                    disabled={analysisLoading}
+                    title="Analyze skill structure"
+                    className="px-2.5 py-1 rounded-md text-[11px] text-muted hover:text-foreground hover:bg-surface-hover transition-colors border border-border disabled:opacity-50"
+                  >
+                    {analysisLoading ? "Analyzing..." : "Analyze"}
+                  </button>
+                )}
+
+                {/* Evaluate */}
+                {isLocalSkill && (
+                  <button
+                    onClick={handleEvaluate}
+                    disabled={evaluationLoading}
+                    title="AI-powered quality evaluation"
+                    className="px-2.5 py-1 rounded-md text-[11px] text-muted hover:text-foreground hover:bg-surface-hover transition-colors border border-border disabled:opacity-50"
+                  >
+                    {evaluationLoading ? "Evaluating..." : "Evaluate"}
                   </button>
                 )}
               </div>
@@ -1244,6 +1535,76 @@ function RightPanel({
 
           {/* Divider */}
           <hr className="border-border mb-6" />
+
+          {/* Tab navigation */}
+          {isLocalSkill && (analysisResult || evaluationResult || analysisLoading || evaluationLoading) && (
+            <div className="flex items-center gap-1 mb-6 border-b border-border">
+              <button
+                onClick={() => setActiveTab("content")}
+                className={`px-3 py-2 text-[12px] font-medium transition-colors border-b-2 -mb-px ${
+                  activeTab === "content"
+                    ? "border-accent text-foreground"
+                    : "border-transparent text-muted hover:text-foreground"
+                }`}
+              >
+                Content
+              </button>
+              {analysisResult && (
+                <button
+                  onClick={() => setActiveTab("analysis")}
+                  className={`px-3 py-2 text-[12px] font-medium transition-colors border-b-2 -mb-px ${
+                    activeTab === "analysis"
+                      ? "border-accent text-foreground"
+                      : "border-transparent text-muted hover:text-foreground"
+                  }`}
+                >
+                  Analysis
+                </button>
+              )}
+              {evaluationResult && (
+                <button
+                  onClick={() => setActiveTab("evaluation")}
+                  className={`px-3 py-2 text-[12px] font-medium transition-colors border-b-2 -mb-px ${
+                    activeTab === "evaluation"
+                      ? "border-accent text-foreground"
+                      : "border-transparent text-muted hover:text-foreground"
+                  }`}
+                >
+                  Evaluation
+                </button>
+              )}
+              {analysisLoading && (
+                <span className="px-3 py-2 text-[12px] text-muted">Analyzing...</span>
+              )}
+              {evaluationLoading && (
+                <span className="px-3 py-2 text-[12px] text-muted">Evaluating...</span>
+              )}
+            </div>
+          )}
+
+          {/* Analysis Panel */}
+          {activeTab === "analysis" && (
+            <div className="mb-6">
+              {analysisError && (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-[12px] text-red-700 mb-4">
+                  {analysisError}
+                </div>
+              )}
+              {analysisResult && <AnalysisPanel analysis={analysisResult} />}
+            </div>
+          )}
+
+          {/* Evaluation Panel */}
+          {activeTab === "evaluation" && (
+            <div className="mb-6">
+              {evaluationError && (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-[12px] text-red-700 mb-4">
+                  {evaluationError}
+                </div>
+              )}
+              {evaluationResult && <EvaluationPanel result={evaluationResult} />}
+            </div>
+          )}
 
           {/* Content: View or Edit mode */}
           {contentLoading ? (

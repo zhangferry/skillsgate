@@ -96,6 +96,72 @@ declare global {
     message?: string
   }
 
+  // Skill analysis types
+  interface SkillAnalysis {
+    name: string
+    description: string
+    structure: {
+      totalFiles: number
+      totalSize: number
+      hasFrontmatter: boolean
+      hasExamples: boolean
+      hasInstructions: boolean
+      sections: Array<{ title: string; level: number; lineCount: number; hasCode: boolean }>
+      codeBlockCount: number
+      bulletPointCount: number
+      headingCount: number
+    }
+    metrics: {
+      wordCount: number
+      sentenceCount: number
+      avgSentenceLength: number
+      readabilityScore: number
+      complexity: "low" | "medium" | "high"
+      specificity: number
+    }
+    techniques: string[]
+    compatibility: {
+      mentionedAgents: string[]
+      hasUniversalScope: boolean
+      requiresSpecialTools: boolean
+      toolDependencies: string[]
+    }
+    qualityIndicators: Array<{
+      category: string
+      score: number
+      maxScore: number
+      description: string
+      suggestions: string[]
+    }>
+  }
+
+  // Skill evaluation types
+  interface SkillEvaluation {
+    name: string
+    overallScore: number
+    dimensions: Array<{
+      name: string
+      score: number
+      maxScore: number
+      description: string
+      details: string[]
+    }>
+    summary: string
+    strengths: string[]
+    weaknesses: string[]
+    recommendations: string[]
+    comparisonToAverage: string
+  }
+
+  interface EvaluationResult {
+    evaluation: SkillEvaluation | null
+    scannerUsed: string
+    durationMs: number
+    timedOut: boolean
+    creditsExhausted: boolean
+    parseFailed: boolean
+  }
+
   interface ElectronAPI {
     detectAgents: () => Promise<DetectedAgent[]>
     listInstalled: () => Promise<InstalledSkill[]>
@@ -138,6 +204,13 @@ declare global {
       canonicalPath: string,
       agentName: string,
     ) => Promise<void>
+
+    // Skill analysis & evaluation
+    analyzeSkill: (skillPath: string) => Promise<SkillAnalysis>
+    evaluateSkill: (
+      skillPath: string,
+      options?: { scanner?: string; mode?: string; timeout?: number },
+    ) => Promise<EvaluationResult>
 
     // Remote servers
     serversList: () => Promise<RemoteServer[]>

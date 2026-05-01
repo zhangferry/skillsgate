@@ -12,6 +12,8 @@ import { runWhoami } from "./commands/whoami.js";
 import { runPublish } from "./commands/publish.js";
 import { runScan } from "./commands/scan.js";
 import { runSetup } from "./commands/setup.js";
+import { runAnalyze } from "./commands/analyze.js";
+import { runEvaluate } from "./commands/evaluate.js";
 
 // "SKILLS" in dark silver (dim), "GATE" in bright white (bold)
 const s = (t: string) => pc.dim(t);       // dark silver
@@ -99,6 +101,17 @@ async function main(): Promise<void> {
       await runScan(restArgs);
       break;
 
+    case "analyze":
+    case "inspect":
+      await runAnalyze(restArgs);
+      break;
+
+    case "evaluate":
+    case "eval":
+    case "rate":
+      await runEvaluate(restArgs);
+      break;
+
     case "setup":
       await runSetup(restArgs);
       break;
@@ -158,6 +171,12 @@ function printHelp(): void {
   console.log(
     `    scan ${DIM("<source>")}     Security-scan skills before installing`,
   );
+  console.log(
+    `    analyze ${DIM("<source>")}   Analyze skill structure and quality`,
+  );
+  console.log(
+    `    evaluate ${DIM("<source>")}  AI-powered skill quality evaluation`,
+  );
   console.log(`    login              Authenticate with SkillsGate`);
   console.log(`    logout             Sign out`);
   console.log(`    whoami             Show current user`);
@@ -175,6 +194,9 @@ function printHelp(): void {
   console.log(`    skillsgate scan owner/repo              ${DIM("# scan a GitHub repo")}`);
   console.log(`    skillsgate scan owner/repo@skill-name   ${DIM("# scan a specific skill in a repo")}`);
   console.log(`    skillsgate scan ./local/skill            ${DIM("# scan a local path")}`);
+  console.log(`    skillsgate analyze owner/repo            ${DIM("# analyze skill structure")}`);
+  console.log(`    skillsgate evaluate owner/repo           ${DIM("# AI-powered evaluation")}`);
+  console.log(`    skillsgate evaluate ./local/skill --mode detailed  ${DIM("# detailed evaluation")}`);
   console.log(`    skillsgate remove my-skill`);
   console.log(`    skillsgate list -g`);
   console.log(`    skillsgate update`);
@@ -188,10 +210,12 @@ function printHelp(): void {
   console.log(`    -a, --agent <id>   Target specific agent(s)`);
   console.log(`    --all              Select all skills/agents`);
   console.log(`    --copy             Use copy mode instead of symlink`);
-  console.log(`    -s, --scanner      Force a specific coding agent ${DIM("(scan only)")}`);
-  console.log(`    --timeout <sec>    Agent timeout, default 120 ${DIM("(scan only)")}`);
+  console.log(`    -s, --scanner      Force a specific coding agent ${DIM("(scan/evaluate)")}`);
+  console.log(`    --timeout <sec>    Agent timeout, default 120 ${DIM("(scan/evaluate)")}`);
   console.log(`    --raw              Show raw agent output ${DIM("(scan only)")}`);
   console.log(`    --no-share         Don't share results with community ${DIM("(scan only)")}`);
+  console.log(`    --mode <mode>      Evaluation depth: quick|standard|detailed ${DIM("(evaluate)")}`);
+  console.log(`    --json             Output as JSON ${DIM("(analyze/evaluate)")}`);
   console.log(`    -v, --version      Show version`);
   console.log(`    -h, --help         Show this help`);
   console.log();

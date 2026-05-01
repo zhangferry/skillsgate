@@ -181,3 +181,81 @@ export interface ScanSummary {
   topFindings: { category: string; count: number; avgSeverity: string }[];
   lastScannedAt: string | null;
 }
+
+// ---------- Analysis Types ----------
+
+export interface SkillAnalysis {
+  name: string;
+  description: string;
+  structure: SkillStructure;
+  metrics: SkillMetrics;
+  techniques: string[];
+  compatibility: CompatibilityInfo;
+  qualityIndicators: QualityIndicator[];
+}
+
+export interface SkillStructure {
+  totalFiles: number;
+  totalSize: number;
+  hasFrontmatter: boolean;
+  hasExamples: boolean;
+  hasInstructions: boolean;
+  sections: SectionInfo[];
+  codeBlockCount: number;
+  bulletPointCount: number;
+  headingCount: number;
+}
+
+export interface SectionInfo {
+  title: string;
+  level: number;
+  lineCount: number;
+  hasCode: boolean;
+}
+
+export interface SkillMetrics {
+  wordCount: number;
+  sentenceCount: number;
+  avgSentenceLength: number;
+  readabilityScore: number;
+  complexity: "low" | "medium" | "high";
+  specificity: number;
+}
+
+export interface CompatibilityInfo {
+  mentionedAgents: string[];
+  hasUniversalScope: boolean;
+  requiresSpecialTools: boolean;
+  toolDependencies: string[];
+}
+
+export interface QualityIndicator {
+  category: "structure" | "clarity" | "completeness" | "best-practices";
+  score: number;
+  maxScore: number;
+  description: string;
+  suggestions: string[];
+}
+
+// ---------- Evaluation Types ----------
+
+export interface SkillEvaluation {
+  name: string;
+  overallScore: number;
+  dimensions: EvaluationDimension[];
+  summary: string;
+  strengths: string[];
+  weaknesses: string[];
+  recommendations: string[];
+  comparisonToAverage: string;
+}
+
+export interface EvaluationDimension {
+  name: string;
+  score: number;
+  maxScore: number;
+  description: string;
+  details: string[];
+}
+
+export type EvaluationMode = "quick" | "standard" | "detailed";
